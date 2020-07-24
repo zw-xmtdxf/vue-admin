@@ -16,7 +16,13 @@
 
         <el-form-item  prop="password" class="item-form">
             <label for="">密码</label>
-            <el-input type="password" v-model="ruleForm.password" autocomplete="off" minlength="6" maxlength="20"></el-input>
+            <el-input type="text" v-model="ruleForm.password" autocomplete="off" minlength="6" maxlength="20"></el-input>
+        </el-form-item>
+
+          <!-- v-show：在元素中添加 display，隐藏DOM元素 -->
+        <el-form-item  prop="passwords" class="item-form" v-show="model ==='register'">
+            <label for="">确认密码</label>
+            <el-input type="text" v-model="ruleForm.passwords" autocomplete="off" minlength="6" maxlength="20"></el-input>
         </el-form-item>
 
         <el-form-item  prop="code" class="item-form">
@@ -38,6 +44,8 @@
     </div>
 </template>
 <script>
+//引入./src/utils/validata里面的方法
+import{stripscript,validataemail,validatapassword,validatacode} from "@/utils/validata";
 export default{
     name:"login",
     data(){
@@ -46,7 +54,7 @@ export default{
         let reg = /^([a-zA-Z]|[0-9])(\w|\-)+@[a-zA-Z0-9]+\.([a-zA-Z]{2,4})$/;
         if (value === '') {
           callback(new Error('请输入用户名'));
-        } else if(!reg.test(value)){
+        } else if(validataemail(value)){
             callback(new Error('用户名格式有误'));
         }
         else {
@@ -55,21 +63,43 @@ export default{
       };
       //验证密码
       var validatePassword = (rule, value, callback) => {
-          let reg = /^(?!\D+$)(?![^a-zA-Z]+$)\S{6,20}$/
+        //过滤后的数据
+        this.ruleForm.password  = stripscript(value);
+        value = this.ruleForm.password;
+          
         if (value === '') {
           callback(new Error('请输入密码'));
-        } else if (!reg.test(value)) {
+        } else if (validatapassword(value)) {
           callback(new Error('密码为6-20位的数字+字母'));
+        } else {
+          callback();
+        }
+      };
+      //验证重复密码
+      var validatePasswords = (rule, value, callback) => {
+        //如果模块值为login时，不用验证密码的重复，直接通过
+        if(this.model === 'login'){
+          callback();
+        }
+        //过滤后的数据
+        this.ruleForm.passwords  = stripscript(value);
+        value = this.ruleForm.passwords;
+          
+        if (value === '') {
+          callback(new Error('请输入密码'));
+        } else if (value != this.ruleForm.password) {
+          callback(new Error('密码不一致，请重新输入'));
         } else {
           callback();
         }
       };
       //验证码
       var validateCode = (rule, value, callback) => {
-      let reg = /^[a-z0-9]{6}$/
+        this.ruleForm.code  = stripscript(value);
+        value = this.ruleForm.code;
         if (value === '') {
           return callback(new Error('请输入验证码'));
-        }else if(!reg.test(value)){
+        }else if(validatacode(value)){
             return callback(new Error('验证码格式错误'));
         }else{
             callback();
@@ -77,12 +107,16 @@ export default{
       };
         return{
             menuTab:[
-                {txt:'登录', current:true},
-                {txt:'注册',current:false}
+                {txt:'登录', current:true,type:"login"},
+                {txt:'注册',current:false,type:"register"}
             ],
+            //模块的值
+            model:'login',
+            //表单数据
             ruleForm: {
           username: '',
           password: '',
+          passwords: '',
           code: ''
         },
         rules: {
@@ -91,6 +125,9 @@ export default{
           ],
           password: [
             { validator: validatePassword, trigger: 'blur' }
+          ],
+          passwords: [
+            { validator: validatePasswords, trigger: 'blur' }
           ],
           code: [
             { validator: validateCode, trigger: 'blur' }
@@ -113,11 +150,20 @@ export default{
         });
       },
     toggleMenu(data){
+
         this.menuTab.forEach(element => {
             element.current = false;           
         });
-        data.current = true;
+        //高光
+        data.current = true;   
+        //修改model的值
+        this.model = data.type;
+        //在切换login和register时，将输入框的值清空
+        this.ruleForm.username =null;    
+        this.ruleForm.password =null;    
+        this.ruleForm.code =null;    
     }
+        
     }
 }
 </script>
