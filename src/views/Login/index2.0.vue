@@ -32,11 +32,12 @@
             <el-col :span="9">
                 <el-button type="success"  class="block">获取验证码</el-button>
             </el-col>
-            </el-row>           
+            </el-row>
+            
         </el-form-item>
 
         <el-form-item>
-            <el-button type="danger" @click="submitForm('ruleForm')" class="login-btn block">提交</el-button >
+            <el-button type="danger" @click="submitForm('ruleForm')" class="login-btn block">登录</el-button >
         </el-form-item>
         </el-form>
         </div>
@@ -44,34 +45,12 @@
 </template>
 <script>
 //引入./src/utils/validata里面的方法
-import{ reactive,ref,onMounted } from '@vue/composition-api'
 import{stripscript,validataemail,validatapassword,validatacode} from "@/utils/validata";
 export default{
     name:"login",
-    setup(prop,{refs}){
-      //这里放置data数据，生命周期，自定义函数
-      /**
-       * 声明数据
-       */
-      const menuTab = reactive([
-          {txt:'登录', current:true,type:"login"},
-          {txt:'注册',current:false,type:"register"}
-      ])
-      const model = ref('login');
-      //获取值方式：number.value
-      // console.log(model.value)
-
-      //表单绑定数据
-      const ruleForm = reactive({
-          username: '',
-          password: '',
-          passwords: '',
-          code: ''
-        })
-
-
-        //验证用户名为邮箱
-      let validateUsername = (rule, value, callback) => {
+    data(){
+      //验证用户名为邮箱
+      var validateUsername = (rule, value, callback) => {
         if (value === '') {
           callback(new Error('请输入用户名'));
         } else if(validataemail(value)){
@@ -80,12 +59,12 @@ export default{
         else {
           callback();//返回true
         }
-      }
+      };
       //验证密码
-      let validatePassword = (rule, value, callback) => {
+      var validatePassword = (rule, value, callback) => {
         //过滤后的数据
-        ruleForm.password  = stripscript(value);
-        value = ruleForm.password;
+        this.ruleForm.password  = stripscript(value);
+        value = this.ruleForm.password;
           
         if (value === '') {
           callback(new Error('请输入密码'));
@@ -94,29 +73,29 @@ export default{
         } else {
           callback();
         }
-      }
+      };
       //验证重复密码
-      let validatePasswords = (rule, value, callback) => {
+      var validatePasswords = (rule, value, callback) => {
         //如果模块值为login时，不用验证密码的重复，直接通过
-        if(model.value === 'login'){
+        if(this.model === 'login'){
           callback();
         }
         //过滤后的数据
-        ruleForm.passwords  = stripscript(value);
-        value = ruleForm.passwords;
+        this.ruleForm.passwords  = stripscript(value);
+        value = this.ruleForm.passwords;
           
         if (value === '') {
           callback(new Error('请输入密码'));
-        } else if (value !=ruleForm.password) {
+        } else if (value != this.ruleForm.password) {
           callback(new Error('密码不一致，请重新输入'));
         } else {
           callback();
         }
-      }
+      };
       //验证码
       let validateCode = (rule, value, callback) => {
-        ruleForm.code  = stripscript(value);
-        value = ruleForm.code;
+        this.ruleForm.code  = stripscript(value);
+        value = this.ruleForm.code;
         if (value === '') {
           return callback(new Error('请输入验证码'));
         }else if(validatacode(value)){
@@ -124,38 +103,22 @@ export default{
         }else{
             callback();
         }
-      }
-      /**
-       * 函数
-       */ 
-        // 写函数的地方    
-      const toggleMenu = (data =>{
-        menuTab.forEach(element => {
-            element.current = false;           
-        });
-        //高光
-        data.current = true;   
-        //修改model的值
-        model.value = data.type;
-        //在切换login和register时，将输入框的值清空
-        ruleForm.username =null;    
-        ruleForm.password =null;    
-        ruleForm.code =null;
-      })
-      
-        const submitForm = (formName =>{
-            refs[formName].validate((valid) => {
-          if (valid) {
-            alert('submit!');
-          } else {
-            console.log('error submit!!');
-            return false;
-          }
-        })
-      })
-      
-        //表单验证
-        const rules = reactive({
+      };
+        return{
+            menuTab:[
+                {txt:'登录', current:true,type:"login"},
+                {txt:'注册',current:false,type:"register"}
+            ],
+            //模块的值
+            model:'login',
+            //表单数据
+            ruleForm: {
+          username: '',
+          password: '',
+          passwords: '',
+          code: ''
+        },
+        rules: {
           username: [
             { validator: validateUsername, trigger: 'blur' }
           ],
@@ -168,24 +131,40 @@ export default{
           code: [
             { validator: validateCode, trigger: 'blur' }
           ]
-        }) 
-      /**
-       * 生命周期
-       */
-      onMounted(()=>{
-      })
-      return{
-        menuTab,
-        model,
-        ruleForm,
-        rules,
-        toggleMenu,
-        submitForm,
-      }
+        }
+        }
     },
     created(){},
-    mounted(){},      
+    mounted(){},
+    methods:{
+        // 写函数的地方
+        submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            alert('submit!');
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+    toggleMenu(data){
+
+        this.menuTab.forEach(element => {
+            element.current = false;           
+        });
+        //高光
+        data.current = true;   
+        //修改model的值
+        this.model = data.type;
+        //在切换login和register时，将输入框的值清空
+        this.ruleForm.username =null;    
+        this.ruleForm.password =null;    
+        this.ruleForm.code =null;    
     }
+        
+    }
+}
 </script>
 <style lang="scss" scoped>
 #login{
