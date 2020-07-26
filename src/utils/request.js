@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { Message } from 'element-ui';
 
 //创建axios,赋给变量service(创建自己的拦截器)
 //手把手撸码前端地址api:http://www.web-jshtml.cn/productapi
@@ -6,7 +7,7 @@ const BASEURL = process.env.NODE_ENV === 'production' ? '' : '/devApi';
 const service = axios.create(
   {
     baseURL: BASEURL,   //http://192.168.0.9:8080/devapi  ==== http://www.web-jshtml.cn/productapi
-    timeout: 1000,
+    timeout: 15000,
   }
 );
 
@@ -23,6 +24,14 @@ service.interceptors.request.use(function (config) {
 // 添加响应拦截器
 service.interceptors.response.use(function (response) {
     // 对响应数据做点什么
+let data = response.data
+if(data.resCode !== 0){
+  Message.error(data.message);
+  return Promise.reject(data);
+}else{
+  return response;
+}
+
     return response;
   }, function (error) {
     // 对响应错误做点什么
