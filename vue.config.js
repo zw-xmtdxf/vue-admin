@@ -3,7 +3,7 @@ module.exports = {
   // 基本路径
   publicPath: process.env.NODE_ENV === 'production' ? '' : '/',
   // 输出文件目录
-  outputDir: process.env.NODE_ENV === 'production' ? 'dist' : 'devdist',
+  outputDir:  process.env.NODE_ENV === 'production' ? 'dist' : 'devdist',
   // eslint-loader 是否在保存的时候检查，用于代码检查
   lintOnSave: false,
   /**
@@ -59,6 +59,16 @@ module.exports = {
     hot: true, // 开启热加载
     hotOnly: false,
     proxy: null, // 设置代理
+    proxy: {
+      '/devApi': {
+          target: 'http://www.web-jshtml.cn/productapi', //API服务器的地址
+          changeOrigin: true,
+          pathRewrite: {
+              '^/devApi': ''
+          }
+      }
+  },
+
     overlay: { // 全屏模式下是否显示脚本错误
       warnings: true,
       errors: true

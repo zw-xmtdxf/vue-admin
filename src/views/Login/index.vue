@@ -30,7 +30,7 @@
             <el-row :gutter="11">
             <el-col :span="15"><el-input v-model.number="ruleForm.code" minlength="6" maxlength="6"></el-input></el-col>
             <el-col :span="9">
-                <el-button type="success"  class="block">获取验证码</el-button>
+                <el-button type="success"  class="block" @click="getSms()">获取验证码</el-button>
             </el-col>
             </el-row>           
         </el-form-item>
@@ -44,7 +44,11 @@
 </template>
 <script>
 //引入./src/utils/validata里面的方法
-import{ reactive,ref,onMounted } from '@vue/composition-api'
+
+import {GetSms} from '@/api/login.js'
+import axios from 'axios';
+import {} from '@/api/login.js'
+import{ reactive,ref,onMounted } from '@vue/composition-api';
 import{stripscript,validataemail,validatapassword,validatacode} from "@/utils/validata";
 export default{
     name:"login",
@@ -142,7 +146,13 @@ export default{
         ruleForm.password =null;    
         ruleForm.code =null;
       })
+      //获取验证码
+      const getSms = (()=>{
+        //调用login.js里面的GetSms方法
+        GetSms();
+      })
       
+      //提交表单
         const submitForm = (formName =>{
             refs[formName].validate((valid) => {
           if (valid) {
@@ -153,6 +163,7 @@ export default{
           }
         })
       })
+      
       
         //表单验证
         const rules = reactive({
@@ -181,10 +192,12 @@ export default{
         rules,
         toggleMenu,
         submitForm,
+        getSms,
       }
     },
     created(){},
-    mounted(){},      
+    mounted(){
+    },      
     }
 </script>
 <style lang="scss" scoped>
