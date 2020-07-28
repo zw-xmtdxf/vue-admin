@@ -17,6 +17,13 @@ export function GetSms(data){
 /**
  * 获取登录接口
  */
+export function Login(data){
+  return service.request({
+    method:"post",
+    url:'/login/',
+    data
+  })
+}
 
 /**
  * 获取注册接口

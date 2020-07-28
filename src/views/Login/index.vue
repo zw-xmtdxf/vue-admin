@@ -45,8 +45,7 @@
 </template>
 <script>
 //引入./src/utils/validata里面的方法
-
-import {GetSms,Register} from '@/api/login.js'
+import {GetSms,Register,Login} from '@/api/login.js'
 import axios from 'axios';
 import{ reactive,ref,onMounted } from '@vue/composition-api';
 import{stripscript,validataemail,validatapassword,validatacode} from "@/utils/validata";
@@ -75,7 +74,7 @@ setup(prop,{ refs,root }){
       ])
 
     //登录按钮禁用状态
-    const loginButtonStatus = ref(true);
+    const loginButtonStatus = ref(false);
     //获取验证码
     const codeButtonStatus = reactive(
       {
@@ -214,33 +213,70 @@ setup(prop,{ refs,root }){
       
       //提交表单
         const submitForm = (formName =>{
+          console.log(model.value)
             refs[formName].validate((valid) => {
+              //表单验证通过
           if (valid) {
-            let requestData = {
-              username: ruleForm.username,
-              password: ruleForm.password,
-              code: ruleForm.code,
-              module:'register'
-              
-            }
-            Register(requestData).then(response=>{
-              let data = response.data;
-              root.$message({
-              message: data.message,
-              type: 'success'
-        })
-            }).catch(error=>{
-
-            })
-          } else {
+            //判断进入登录接口还是注册接口
+            model.value == 'login'? login():register();
+            } else {
             console.log('error submit!!');
             return false;
           }
         })
       })
 
+      /**
+       * 登录接口
+       */
+      const login = (()=>{
+        let requestData = {
+          username: ruleForm.username,
+          password: ruleForm.password,
+          code: ruleForm.code,
+
+        }
+          Login(requestData).then(response=>{
+            console.log('登录结果')
+            console.log(response)
+
+          }).catch(error=>{
+
+          })
+      })
+      
+      /**
+       * 注册接口操作
+       */
+      const register = (()=>{
+        let requestData = {
+              username: ruleForm.username,
+              password: ruleForm.password,
+              code: ruleForm.code,
+              module:'register'
+            }
+            //注册接口
+            Register(requestData).then(response=>{
+              let data = response.data;
+              root.$message({
+              message: data.message,
+              type: 'success'
+                          })
+              //注册成功
+              toggleMenu(menuTab[0])
+              //清除倒计时
+              clearCountDown();
+
+              //失败时执行代码
+            }).catch(error=>{
+            })
+      })
+
+
       //倒计时
       const countDown =((number)=>{
+        //清除定时器
+        if(timer.value){clearInterval(timer.value);}
           //setTumeout 只执行一次
           //setInterval 不断执行，需要条件才会停止
 
@@ -259,6 +295,26 @@ setup(prop,{ refs,root }){
             
           },1000)
       })
+
+      /**
+       * 清除倒计时
+       * 
+       */
+      const clearCountDown = (()=>{
+        //还原验证码默认状态
+        codeButtonStatus.status = false;
+        codeButtonStatus.text = '获取验证码'
+        //清除倒计时
+        clearInterval(timer.value);
+
+
+      //   const codeButtonStatus = reactive(
+      // {
+      //   status:false,
+      //   text:'获取验证码'
+      // })
+      })
+
       
       
         //表单验证
