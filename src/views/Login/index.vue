@@ -16,13 +16,13 @@
 
         <el-form-item  prop="password" class="item-form">
             <label for="password">密码</label>
-            <el-input id="password" type="text" v-model="ruleForm.password" autocomplete="off" minlength="6" maxlength="20"></el-input>
+            <el-input id="password" type="password" v-model="ruleForm.password" autocomplete="off" minlength="6" maxlength="20"></el-input>
         </el-form-item>
 
           <!-- v-show：在元素中添加 display，隐藏DOM元素 -->
         <el-form-item  prop="passwords" class="item-form" v-show="model ==='register'">
             <label for="passwords">确认密码</label>
-            <el-input id="passwords" type="text" v-model="ruleForm.passwords" autocomplete="off" minlength="6" maxlength="20"></el-input>
+            <el-input id="passwords" type="password" v-model="ruleForm.passwords" autocomplete="off" minlength="6" maxlength="20"></el-input>
         </el-form-item>
 
         <el-form-item  prop="code" class="item-form">
@@ -44,8 +44,12 @@
     </div>
 </template>
 <script>
+
 //引入./src/utils/validata里面的方法
-import {GetSms,Register,Login} from '@/api/login.js'
+
+//JS实现的base64加密、md5加密及sha1加密
+import sha1 from "js-sha1";
+import {GetSms,Register,Login} from '@/api/login.js';
 import axios from 'axios';
 import{ reactive,ref,onMounted } from '@vue/composition-api';
 import{stripscript,validataemail,validatapassword,validatacode} from "@/utils/validata";
@@ -74,7 +78,16 @@ setup(prop,{ refs,root }){
       ])
 
     //登录按钮禁用状态
-    const loginButtonStatus = ref(false);
+    const loginButtonStatus = ref(true);
+
+    //更新按钮的状态
+    const updataButtonStatus = ((params)=>{
+        codeButtonStatus.status = params.status;
+        codeButtonStatus.text = params.text
+    })
+
+
+
     //获取验证码
     const codeButtonStatus = reactive(
       {
@@ -155,9 +168,11 @@ setup(prop,{ refs,root }){
         }
       }
       /**
-       * 函数
+       * 函数 // 声明函数的地方  
        */ 
-        // 写函数的地方    
+          
+
+        //切换模块
       const toggleMenu = (data =>{
         menuTab.forEach(element => {
             element.current = false;           
@@ -166,9 +181,17 @@ setup(prop,{ refs,root }){
         data.current = true;   
         //修改model的值
         model.value = data.type;
-        //在切换login和register时，重置表单
-        refs.ruleForm.resetFields();
+        resetFormData();
+        clearCountDown();
+        loginButtonStatus.value = true;
       })
+
+      //清除表单数据
+    const resetFormData = (()=>{
+      //在切换login和register时，重置表单
+        refs.ruleForm.resetFields();
+    })
+
       //获取验证码
       const getSms = (()=>{
         //对错误进行提示
@@ -187,10 +210,10 @@ setup(prop,{ refs,root }){
         }
         // codeButtonStatus.value = true;
         // codeButtonText.value = '发送中'
-        codeButtonStatus.status = true;
-        codeButtonStatus.text = '发送中'
-
-
+        updataButtonStatus({
+          status:true,
+          text:'发送中'
+        });
         setTimeout(()=>{
           //调用login.js里面的GetSms方法,获取验证码
         GetSms(requestData).then(response => {
@@ -227,19 +250,22 @@ setup(prop,{ refs,root }){
       })
 
       /**
-       * 登录接口
+       * 登录
        */
       const login = (()=>{
         let requestData = {
           username: ruleForm.username,
-          password: ruleForm.password,
+          password: sha1(ruleForm.password),
           code: ruleForm.code,
-
         }
           Login(requestData).then(response=>{
             console.log('登录结果')
             console.log(response)
-
+            //页面跳转
+            root.$router.push({
+              name:'Console'
+            })
+            
           }).catch(error=>{
 
           })
@@ -251,11 +277,11 @@ setup(prop,{ refs,root }){
       const register = (()=>{
         let requestData = {
               username: ruleForm.username,
-              password: ruleForm.password,
+              password: sha1(ruleForm.password),
               code: ruleForm.code,
               module:'register'
             }
-            //注册接口
+            //注册
             Register(requestData).then(response=>{
               let data = response.data;
               root.$message({
@@ -285,10 +311,11 @@ setup(prop,{ refs,root }){
           timer.value = setInterval(() =>{
             time--;
             if(time === 0){
-              clearInterval(timer.value);   
-              codeButtonStatus.status = false;
-              codeButtonStatus.text = '再次获取'
-              loginButtonStatus.value = true;           
+              clearInterval(timer.value); 
+              updataButtonStatus({
+                    status:false,
+                    text:'再次获取'
+                  });         
             }else{
                codeButtonStatus.text = `倒计时${time}秒`
             }
@@ -302,8 +329,10 @@ setup(prop,{ refs,root }){
        */
       const clearCountDown = (()=>{
         //还原验证码默认状态
-        codeButtonStatus.status = false;
-        codeButtonStatus.text = '获取验证码'
+        updataButtonStatus({
+          status:false,
+          text:'获取验证码'
+        }); 
         //清除倒计时
         clearInterval(timer.value);
 
@@ -401,3 +430,37 @@ setup(prop,{ refs,root }){
     }
 }
 </style>
+
+<!--
+密码加密：
+1、在前端预先加密
+登录的密码：123456(普通字符串)
+经过加密后的密码：sha1('123456') == '8465132safddfs45123ewg'（加密后的字符串）
+
+2、后台加密：
+接收到字符串：'8465132safddfs45123ewg'
+后台再次加密：（md5加密） md5('8465132safddfs45123ewg') == '9846513saff9sa9dg645gag79846d5agaf9'
+最终新的字符串写入数据库 9846513saff9sa9dg645gag79846d5agaf9
+-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
