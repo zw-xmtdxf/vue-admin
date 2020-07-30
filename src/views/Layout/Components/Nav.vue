@@ -1,12 +1,56 @@
 // 每个.vue文件都有三块东西，template/模板，script/JS，style/样式，模板外层一定要有根元素包着
 <template>
     <div id="nav-wrap">
-        菜单
+        <el-menu default-active="1-4-1"
+         class="el-menu-vertical-demo"
+          @open="handleOpen"
+           @close="handleClose"
+         :collapse="isCollapse"
+          background-color="transparent"
+           text-color="#fff"
+            active-text-color="#fff" router>
+            <template v-for="(item,index) in routers">
+            <el-submenu  v-if="!item.hidden" :key="item.id" :index="index+''" >
+                <!-- 一级菜单 -->
+                <template slot="title">
+                <i class="el-icon-location"></i>
+                <span slot="title">{{item.meta.name}}</span>
+                </template>
+                <!-- 子级菜单 -->
+                <el-menu-item v-for="subItem in item.children" :key="subItem.id" :index="subItem.path">{{subItem.meta.name}}</el-menu-item>     
+            </el-submenu>
+            </template>
+            </el-menu>
     </div>
 </template>
 <script>
+import{ reactive,ref,isRef,toRefs,onMounted } from '@vue/composition-api';
 export default {
-    
+    name:'navMenu',
+    setup(props,{root}){
+        //data数组
+        //菜单栏收起还是展开
+        const isCollapse = ref(false);
+        const routers = reactive(root.$router.options.routes);
+        // console.log(routers);
+
+        /**
+         * 函数
+         */
+        const handleOpen = ((key, keyPath)=> {
+        console.log(key, keyPath);
+      });
+        const handleClose = ((key, keyPath)=> {
+        console.log(key, keyPath);
+      });
+
+        return{
+            isCollapse,
+            handleOpen,
+            handleClose,
+            routers,
+        }
+    }
 }
 </script>
 <style lang="scss"scoped>

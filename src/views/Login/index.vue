@@ -51,7 +51,7 @@
 import sha1 from "js-sha1";
 import {GetSms,Register,Login} from '@/api/login.js';
 import axios from 'axios';
-import{ reactive,ref,onMounted } from '@vue/composition-api';
+import{ reactive,ref,isRef,toRefs,onMounted } from '@vue/composition-api';
 import{stripscript,validataemail,validatapassword,validatacode} from "@/utils/validata";
 export default{
     name:"login",
